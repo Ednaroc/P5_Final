@@ -113,6 +113,19 @@ addButton.addEventListener('click', ($event) => {
                 break;
             }
         }
+        // BUG: can't use forEach: problem with break
+        // cart.forEach((el)=>{
+        //     if (productId == el.id && productColors.value == el.color) {
+        //         el.quantity += productQuantity;
+        //         if (el.quantity > 100) {
+        //             alert('You have reached the maximum quantity of items (100 items) you can order for this sofa and color combination.');
+        //             el.quantity = 100;
+        //         }
+        //         flag = true;
+        //         break;
+        //     }
+        // });
+
 
         //Flag to add a new product to the cart
         if (flag == false) {

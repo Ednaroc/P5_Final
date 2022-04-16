@@ -10,22 +10,22 @@ const sectionItems = document.getElementById('cart__items');
 const totalCartQuantity = document.getElementById('totalQuantity');
 const totalCartPrice = document.getElementById('totalPrice');
 
-function createCartHtml(productId, imageUrl, altTxt, productName, productColor, productPrice, productQtity) {
+function createCartHtml(product) {
     let html = 
-    `<article class="cart__item" data-id="${productId}" data-color="${productColor}">
+    `<article class="cart__item" data-id="${product.productId}" data-color="${product.productColor}">
         <div class="cart__item__img">
-            <img src="${imageUrl}" alt="${altTxt}">
+            <img src="${product.imageUrl}" alt="${product.altTxt}">
         </div>
         <div class="cart__item__content">
             <div class="cart__item__content__description">
-                <h2>${productName}</h2>
-                <p>${productColor}</p>
-                <p>€${productPrice}</p>
+                <h2>${product.productName}</h2>
+                <p>${product.productColor}</p>
+                <p>€${product.productPrice}</p>
             </div>
             <div class="cart__item__content__settings">
                 <div class="cart__item__content__settings__quantity">
                     <p>Qtity: </p>
-                    <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${productQtity}">
+                    <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.productQtity}">
                 </div>
                 <div class="cart__item__content__settings__delete">
                     <p class="deleteItem">Delete</p>
@@ -40,7 +40,7 @@ function createCartHtml(productId, imageUrl, altTxt, productName, productColor, 
  * Function to calculate the total number of items in the cart and the total price.
  * This function is called in other functions when the cart is updated.
  */
-function totalCart2() {
+function calculateCartTotalCost() {
     const inputQuantity = document.getElementsByClassName('itemQuantity');
     const inputPrice = document.querySelectorAll('p + p');
     let totalQuantity = 0;
@@ -67,13 +67,33 @@ async function mycart() {
         try {
             const productPromise = makeRequest('GET', api + '/' + productId);
             const productResponse = await productPromise;
-            finalHtml += createCartHtml(tempCart[i].id, productResponse.imageUrl, productResponse.altTxt, productResponse.name, tempCart[i].color, productResponse.price, tempCart[i].quantity);
+            let cartProduct = {
+                productId: tempCart[i].id,
+                imageUrl: productResponse.imageUrl,
+                altTxt: productResponse.altTxt,
+                productName: productResponse.name,
+                productColor: tempCart[i].color,
+                productPrice: productResponse.price,
+                productQtity: tempCart[i].quantity
+            };
+            finalHtml += createCartHtml(cartProduct);
         } catch (error) {
             alert(error.error);
         }
     }
+    // BUG: can't use forEach: problem with await
+    // tempCart.forEach((el)=>{
+    //     const productId = el.id;
+    //     try {
+    //         const productPromise = makeRequest('GET', api + '/' + productId);
+    //         const productResponse = await productPromise;
+    //         finalHtml += createCartHtml(el.id, productResponse.imageUrl, productResponse.altTxt, productResponse.name, el.color, productResponse.price, el.quantity);
+    //     } catch (error) {
+    //         alert(error.error);
+    //     }
+    // });
     sectionItems.innerHTML = finalHtml;
-    totalCart2();
+    calculateCartTotalCost();
     
     // Product quantity event listeners and consequently cart update
     const inputQuantity = document.getElementsByClassName('itemQuantity');
@@ -83,9 +103,20 @@ async function mycart() {
             tempCart[i].quantity = Number($event.target.value);
             const cartString = JSON.stringify(tempCart);
             localStorage.setItem('cart', cartString);
-            totalCart2();
+            calculateCartTotalCost();
         });
     }
+    // BUG: can't use forEach: problem with
+    //  Uncaught (in promise) TypeError: inputQuantity.forEach is not a function
+    // inputQuantity.forEach((el, i)=>{
+    //     el.addEventListener('change', ($event) => {
+    //         const tempCart = JSON.parse(localStorage.getItem('cart'));
+    //         tempCart[i].quantity = Number($event.target.value);
+    //         const cartString = JSON.stringify(tempCart);
+    //         localStorage.setItem('cart', cartString);
+    //         calculateCartTotalCost();
+    //     });
+    // });
 
 
     // Product deletion and consequently cart update
@@ -110,7 +141,7 @@ async function mycart() {
             localStorage.setItem('cart', cartString);
             
             // update the cart's total price
-            totalCart2();
+            calculateCartTotalCost();
         });
     });
 }
@@ -162,6 +193,8 @@ formInputs.forEach(checkformInput);
 
 //SUBMIT THE ORDER
 const orderButton = document.getElementById('order');
+// orderButton.setAttribute('disabled', 'true');
+
 async function submitOrder(dataPost) {
     try {
         const postPromise = makeRequest('POST', api + '/order', dataPost);
@@ -175,16 +208,25 @@ async function submitOrder(dataPost) {
 
 orderButton.addEventListener('click', ($event) => {
     $event.preventDefault();
-    // Check first that all form inputs are filled.
     let flag = false;
+    const finalCart = JSON.parse(localStorage.getItem('cart'));
+    if (!finalCart) {
+        alert("Your cart is empty! You can't pass any order.");
+        flag = true;
+    } else if (finalCart.length == 0) {
+        alert("Your cart is empty! You can't pass any order.");
+        flag = true;
+    }
+
+    // Check first that all form inputs are filled.
     formInputs.forEach((element) =>{
         let inputErrorMsg = element.nextElementSibling;
         if (!element.value) {
             inputErrorMsg.style.display = 'inline';
             inputErrorMsg.textContent = 'This field is required.';
             flag = true;
-        } else {
-            inputErrorMsg.style.display = 'none'; 
+        } else if (inputErrorMsg.style.display == 'inline') {
+            flag = true;
         }
     })
 
@@ -201,12 +243,11 @@ orderButton.addEventListener('click', ($event) => {
         
         // Create the product table for the POST request
         const products = [];
-        const finalCart = JSON.parse(localStorage.getItem('cart'));
+        // const finalCart = JSON.parse(localStorage.getItem('cart'));
         finalCart.forEach((item) => products.push(item.id));
         
         // Create the final data sent with the POST request
         const dataPost = {contact: contact, products: products};
-
         submitOrder(dataPost);
         // $event.stopPropagation();
     }
