@@ -11,7 +11,7 @@ const api = 'http://localhost:3000/api/products';
  * It uses promises and can generate GET and POST requests.
  * @param {string} method - The type of the request, accepts only GET or POST.
  * @param {string} url - The URL of the API.
- * @param {*} data - The data object for the POST reques. Should contain a contact object and a product table.
+ * @param {*} data - The data object for the POST request. Should contain a contact object and a product table.
  * @returns - A response.
  */
 

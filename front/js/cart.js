@@ -10,6 +10,11 @@ const sectionItems = document.getElementById('cart__items');
 const totalCartQuantity = document.getElementById('totalQuantity');
 const totalCartPrice = document.getElementById('totalPrice');
 
+/**
+ * This function creates the HTML text to insert the elements on the cart page.
+ * @param {*} product - A single product object from the promise repsonse.
+ * @returns - HTML content
+ */
 function createCartHtml(product) {
     let html = 
     `<article class="cart__item" data-id="${product.productId}" data-color="${product.productColor}">
@@ -81,17 +86,7 @@ async function mycart() {
             alert(error.error);
         }
     }
-    // BUG: can't use forEach: problem with await
-    // tempCart.forEach((el)=>{
-    //     const productId = el.id;
-    //     try {
-    //         const productPromise = makeRequest('GET', api + '/' + productId);
-    //         const productResponse = await productPromise;
-    //         finalHtml += createCartHtml(el.id, productResponse.imageUrl, productResponse.altTxt, productResponse.name, el.color, productResponse.price, el.quantity);
-    //     } catch (error) {
-    //         alert(error.error);
-    //     }
-    // });
+
     sectionItems.innerHTML = finalHtml;
     calculateCartTotalCost();
     
@@ -106,18 +101,6 @@ async function mycart() {
             calculateCartTotalCost();
         });
     }
-    // BUG: can't use forEach: problem with
-    //  Uncaught (in promise) TypeError: inputQuantity.forEach is not a function
-    // inputQuantity.forEach((el, i)=>{
-    //     el.addEventListener('change', ($event) => {
-    //         const tempCart = JSON.parse(localStorage.getItem('cart'));
-    //         tempCart[i].quantity = Number($event.target.value);
-    //         const cartString = JSON.stringify(tempCart);
-    //         localStorage.setItem('cart', cartString);
-    //         calculateCartTotalCost();
-    //     });
-    // });
-
 
     // Product deletion and consequently cart update
     let deleteProduct = document.querySelectorAll('.deleteItem');
@@ -193,7 +176,6 @@ formInputs.forEach(checkformInput);
 
 //SUBMIT THE ORDER
 const orderButton = document.getElementById('order');
-// orderButton.setAttribute('disabled', 'true');
 
 async function submitOrder(dataPost) {
     try {
@@ -201,6 +183,7 @@ async function submitOrder(dataPost) {
         const postResponse = await postPromise;
         const orderId = postResponse.orderId;
         window.location.href = "./confirmation.html?id=" + orderId;
+        localStorage.clear('cart');
     } catch (errorResponse) {
         alert(errorResponse.error);
     }
@@ -243,13 +226,11 @@ orderButton.addEventListener('click', ($event) => {
         
         // Create the product table for the POST request
         const products = [];
-        // const finalCart = JSON.parse(localStorage.getItem('cart'));
         finalCart.forEach((item) => products.push(item.id));
         
         // Create the final data sent with the POST request
         const dataPost = {contact: contact, products: products};
         submitOrder(dataPost);
-        // $event.stopPropagation();
     }
 });
  

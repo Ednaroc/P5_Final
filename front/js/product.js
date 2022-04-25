@@ -16,10 +16,9 @@ const productColors = document.getElementById('colors');
 const addButton = document.getElementById('addToCart');
 
 /**
- * This function insert a product and its details into the product page.
+ * This function inserts a product and its details into the product page.
  * @param {*} product - A single product object from the promise repsonse.
  */
-// function updateProductPage(imageUrl, altTxt, name, description, price, colors) {
 function updateProductPage(product) {
     const {name, imageUrl, description, altTxt, price, colors} = product;
 
@@ -72,6 +71,7 @@ async function displayOneProduct(productId) {
 const productId = getProductId();
 displayOneProduct(productId);
 
+
 /**
  * This part of the code controls the addition of products to the cart.
  * 
@@ -101,7 +101,7 @@ addButton.addEventListener('click', ($event) => {
             cart = JSON.parse(localStorage.getItem('cart'));
         }
 
-        //Loop to check if the product in the specified color exist already
+        //Loop to check if the product in the specified color exists already
         for (i in cart) {
             if (productId == cart[i].id && productColors.value == cart[i].color) {
                 cart[i].quantity += productQuantity;
@@ -113,19 +113,6 @@ addButton.addEventListener('click', ($event) => {
                 break;
             }
         }
-        // BUG: can't use forEach: problem with break
-        // cart.forEach((el)=>{
-        //     if (productId == el.id && productColors.value == el.color) {
-        //         el.quantity += productQuantity;
-        //         if (el.quantity > 100) {
-        //             alert('You have reached the maximum quantity of items (100 items) you can order for this sofa and color combination.');
-        //             el.quantity = 100;
-        //         }
-        //         flag = true;
-        //         break;
-        //     }
-        // });
-
 
         //Flag to add a new product to the cart
         if (flag == false) {
